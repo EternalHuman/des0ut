@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Лидерборд турнира</title>
+  <meta name="description" content="Публичный лидерборд турнира: вкладки Обзор, Команды, Игроки."/>
+  <meta property="og:title" content="Лидерборд турнира"/>
+  <meta property="og:description" content="Обзор правил, таблица команд и игроков."/>
+  <meta property="og:type" content="website"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
+
+  <!-- Favicon -->
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/icons/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="assets/icons/favicon-16.png" sizes="16x16" type="image/png">
+  <!-- (опционально) старый fallback для некоторых браузеров -->
+  <link rel="shortcut icon" href="assets/icons/favicon-32.png" type="image/png">
+
+  <!-- Стили -->
+  <link rel="stylesheet" href="assets/styles.css"/>
+
+  <!-- Переопределения: перенести кредит в правый верх и уменьшить размер -->
+  <style>
+    .header__inner {
+      position: relative; /* якорь для абсолютного позиционирования */
+    }
+    .header-credit {
+      position: absolute;
+      top: 10px;
+      right: 16px;
+      font-size: 12px;      /* уменьшенный текст */
+      line-height: 1;
+      white-space: nowrap;  /* не переносить строку */
+      z-index: 10;
+    }
+    @media (max-width: 600px) {
+      .header-credit {
+        top: 8px;
+        right: 12px;
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container header__inner">
+      <div class="brand">
+        <div class="logo">
+          <img src="assets/icons/favicon.svg" alt="Иконка турнира" onerror="this.style.display='none'"/>
+        </div>
+        <div>
+          <h1 id="title">Турнир</h1>
+          <div class="updated" id="updated">Обновлено: …</div>
+        </div>
+      </div>
+      <a class="header-credit" href="https://t.me/EternalHuman" target="_blank" rel="noopener noreferrer">by @EternalHuman</a>
+      <nav class="tabs">
+        <div class="tab active" data-tab="overview">Турнир</div>
+        <div class="tab" data-tab="teams">Команды</div>
+        <div class="tab" data-tab="matches">Матчи</div>
+        <div class="tab" data-tab="players">Игроки</div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- Overview -->
+    <section class="card card--section" data-panel="overview">
+      <article class="info-card info-card--accent status-card" id="statusCard">
+        <header class="info-card__header status-card__header">
+          <h3>Статус</h3>
+          <span class="status-card__state" id="statusState">Обновление…</span>
+        </header>
+        <div class="status-card__body">
+          <div class="status-message" id="statusMessage">Загрузка статуса турнира…</div>
+          <div class="status-tiles" id="statusTiles" hidden></div>
+          <div class="status-countdown" id="statusCountdown" aria-live="polite" aria-atomic="true"></div>
+          <div class="status-podium" id="statusPodium" hidden></div>
+        </div>
+      </article>
+      <div class="section-header">
+        <div>
+          <h2>Правила и настройки</h2>
+          <p class="section-subtitle">Сводка ключевых правил турнира и начисления очков.</p>
+        </div>
+      </div>
+      <div class="overview-layout">
+        <article class="info-card info-card--accent overview-primary">
+          <header class="info-card__header">
+            <h3>Основная информация</h3>
+            <p>Ключевые параметры турнира и очки за действия.</p>
+          </header>
+          <div class="primary-stat-grid">
+            <div class="primary-stat">
+              <span class="primary-stat__label">Матчей</span>
+              <span class="primary-stat__value" id="t-matches"></span>
+            </div>
+            <div class="primary-stat primary-stat--action">
+              <span class="primary-stat__label">Очки за действия</span>
+              <div class="primary-stat__value">
+                <span class="primary-stat__meta">Убийство</span>
+                <span class="primary-stat__accent" id="t-kill"></span>
+              </div>
+            </div>
+          </div>
+          <div class="info-block">
+            <span class="info-block__label">Карты</span>
+            <div id="t-maps" class="info-block__pills pills"></div>
+          </div>
+          <div class="info-block">
+            <span class="info-block__label">Описание</span>
+            <p class="info-block__text" id="t-desc"></p>
+          </div>
+          <div class="info-block">
+            <span class="info-block__label">Тай-брейк</span>
+            <div class="info-block__list" id="t-rules"></div>
+          </div>
+        </article>
+        <article class="info-card placements-card">
+          <header class="info-card__header">
+            <h3>Очки за места</h3>
+            <p>Вознаграждение за итоговую позицию в матче.</p>
+          </header>
+          <div id="t-placements" class="placements-list"></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Teams -->
+    <section class="card card--section" data-panel="teams" style="display:none">
+      <div class="section-header">
+        <div>
+          <h2>Таблица команд</h2>
+          <p class="section-subtitle">Полный рейтинг команд с детализацией по матчам.</p>
+        </div>
+      </div>
+      <div class="table-toolbar">
+        <input class="input" id="teamFilter" placeholder="Поиск по командам…"/>
+        <span class="badge" id="teamCount"></span>
+      </div>
+      <div class="table-wrap"><table id="teamsTable">
+        <thead>
+          <tr>
+            <th class="sortable" data-key="place">#</th>
+            <th class="sortable" data-key="team">Команда</th>
+            <th class="sortable num" data-key="points">Очки</th>
+            <th class="sortable num" data-key="kills">Убийства</th>
+            <th class="sortable num" data-key="placeAvg">Сред. место</th>
+            <th class="sortable num" data-key="matches">Матчи</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table></div>
+      <div class="info-card info-card--inline" style="margin-top:24px">
+        <div class="info-card__header">
+          <h3>По матчам: очки • киллы • плейсмент</h3>
+          <p>Быстрый просмотр динамики выступления каждой команды.</p>
+        </div>
+        <div id="perMatch" class="pergrid"></div>
+      </div>
+    </section>
+
+    <!-- Matches -->
+    <section class="card card--section" data-panel="matches" style="display:none">
+      <div class="section-header">
+        <div>
+          <h2>Матчи</h2>
+          <p class="section-subtitle">Сводка по каждому матчу: лидеры по очкам, киллам и плейсменту.</p>
+        </div>
+      </div>
+      <div id="matchesList" class="match-grid"></div>
+    </section>
+
+    <!-- Players -->
+    <section class="card card--section" data-panel="players" style="display:none">
+      <div class="section-header">
+        <div>
+          <h2>Статистика игроков</h2>
+          <p class="section-subtitle">Персональные показатели и вклад в команду.</p>
+        </div>
+      </div>
+      <div class="table-toolbar">
+        <input class="input" id="playerFilter" placeholder="Поиск по нику или команде…"/>
+        <span class="badge" id="playerCount"></span>
+      </div>
+      <div class="table-wrap"><table id="playersTable">
+        <thead>
+          <tr>
+            <th class="sortable num" data-key="impact">Импакт</th>
+            <th class="sortable" data-key="player">Игрок</th>
+            <th class="sortable" data-key="team">Команда</th>
+            <th class="sortable num" data-key="kills">Убийства</th>
+            <th class="sortable num" data-key="adr">ADR</th>
+            <th class="sortable num" data-key="assists">Помощь</th>
+            <th class="sortable num" data-key="revives">Ревайвы</th>
+            <th class="sortable num" data-key="dbnos">
+              <span class="th-label">DBNOs
+                <button type="button" class="info-icon" title="Упал, но не умер" aria-label="Упал, но не умер" aria-expanded="false" aria-haspopup="true">i</button>
+              </span>
+            </th>
+            <th class="sortable num" data-key="timeSurvived">
+              <span class="th-label">Время (с)
+                <button type="button" class="info-icon" title="Время жизни" aria-label="Время жизни" aria-expanded="false" aria-haspopup="true">i</button>
+              </span>
+            </th>
+            <th class="sortable num" data-key="matches">Матчи</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table></div>
+    </section>
+
+    <div class="footer">© Leaderboard · by @EternalHuman</div>
+  </main>
+
+  <script>
+    (function() {
+      function appendScript(version) {
+        var s = document.createElement('script');
+        s.src = 'assets/app.js' + (version ? ('?v=' + encodeURIComponent(version)) : '');
+        s.defer = false;
+        document.body.appendChild(s);
+      }
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'data/meta.json', true);
+        xhr.setRequestHeader('Cache-Control', 'no-cache');
+        xhr.onload = function() {
+          try {
+            var meta = JSON.parse(xhr.responseText || '{}');
+            appendScript(meta && meta.version);
+          } catch (e) {
+            appendScript(null);
+          }
+        };
+        xhr.onerror = function(){ appendScript(null); };
+        xhr.send(null);
+      } catch(e) {
+        appendScript(null);
+      }
+    })();
+  </script>
+</body>
+</html>
