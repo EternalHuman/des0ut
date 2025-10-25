@@ -513,6 +513,7 @@ async function init() {
           matches: 0,
           placementSum: 0,
           placementCount: 0,
+          placementPoints: 0,
           perMatchPoints: Array(matchSlots).fill(null),
           perMatchKills: Array(matchSlots).fill(null),
           perMatchPlacement: Array(matchSlots).fill(null)
@@ -553,6 +554,7 @@ async function init() {
           : placementPointsValue + killsValue * killPoint;
 
         stats.points += computedPoints;
+        stats.placementPoints += placementPointsValue;
         stats.kills += killsValue;
         stats.matches += 1;
         if (placement != null) {
@@ -807,6 +809,7 @@ async function init() {
         points: stats.points,
         kills: stats.kills,
         matches: stats.matches,
+        placementPoints: stats.placementPoints,
         placeAvg: avg,
         perMatchPoints: stats.perMatchPoints.slice(),
         perMatchKills: stats.perMatchKills.slice(),
@@ -817,6 +820,8 @@ async function init() {
     teamRows.sort((a, b) => {
       const diffPoints = (b.points ?? 0) - (a.points ?? 0);
       if (diffPoints !== 0) return diffPoints;
+      const placementPointsDiff = (b.placementPoints ?? 0) - (a.placementPoints ?? 0);
+      if (placementPointsDiff !== 0) return placementPointsDiff;
       const avgA = Number.isFinite(a.placeAvg) ? a.placeAvg : Infinity;
       const avgB = Number.isFinite(b.placeAvg) ? b.placeAvg : Infinity;
       if (avgA !== avgB) return avgA - avgB;
@@ -856,7 +861,7 @@ async function init() {
       const slots = [
         { place: 2, modifier: 'second', data: winners[1] },
         { place: 1, modifier: 'first', data: winners[0] },
-        { place: 3, modifier: 'third', data: winners[3] }
+        { place: 3, modifier: 'third', data: winners[2] }
       ].filter(slot => slot.data);
       if (!slots.length) {
         statusEls.podium.innerHTML = '';
